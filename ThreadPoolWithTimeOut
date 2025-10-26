@@ -1,0 +1,61 @@
+import java.util.*;
+import java.util.concurrent.*;
+
+public class ThreadPoolWithTimeout {
+    
+    public static void main(String[] args) {
+        // Number of threads in the pool
+        int poolSize = 3;
+        // Timeout for each task (in seconds)
+        int timeout = 2;
+
+        ExecutorService executor = Executors.newFixedThreadPool(poolSize);
+
+        // Example tasks
+        List<Callable<String>> tasks = Arrays.asList(
+            createTask("Task-1", 1),
+            createTask("Task-2", 3), // Will timeout
+            createTask("Task-3", 2),
+            createTask("Task-4", 5)  // Will timeout
+        );
+
+        for (Callable<String> task : tasks) {
+            Future<String> future = executor.submit(task);
+
+            try {
+                // Wait for the task to complete within the timeout
+                String result = future.get(timeout, TimeUnit.SECONDS);
+                System.out.println("✅ " + result);
+            } catch (TimeoutException e) {
+                System.out.println("⏰ Task timed out! Canceling...");
+                future.cancel(true);
+            } catch (InterruptedException | ExecutionException e) {
+                System.out.println("❌ Task failed: " + e.getMessage());
+            }
+        }
+
+        executor.shutdown();
+        System.out.println("✅ All tasks submitted. Executor shutting down...");
+    }
+
+    // Helper method to simulate variable-time tasks
+    private static Callable<String> createTask(String name, int duration) {
+        return () -> {
+            try {
+                System.out.println("▶️ " + name + " started (will take " + duration + "s)");
+                for (int i = 0; i < duration; i++) {
+                    Thread.sleep(1000); // Simulate work
+                    if (Thread.currentThread().isInterrupted()) {
+                        System.out.println("⚠️ " + name + " was interrupted!");
+                        return name + " canceled.";
+                    }
+                }
+                System.out.println("✅ " + name + " completed.");
+                return name + " done.";
+            } catch (InterruptedException e) {
+                System.out.println("⚠️ " + name + " interrupted during sleep.");
+                return name + " canceled.";
+            }
+        };
+    }
+}

@@ -1,0 +1,34 @@
+// ServerDetails.java
+import java.io.*;
+import java.net.*;
+
+public class ServerDetails {
+    public static void main(String[] args) {
+        int port = 1234; // You can choose any free port
+
+        try {
+            // Step 1: Create ServerSocket
+            ServerSocket serverSocket = new ServerSocket(port);
+            System.out.println("Server started. Waiting for client on port " + port + "...");
+
+            // Step 2: Accept client connection
+            Socket socket = serverSocket.accept();
+
+            // Step 3: Get client details
+            InetAddress clientAddress = socket.getInetAddress();
+            int clientPort = socket.getPort();
+
+            // Step 4: Display client info
+            System.out.println("Client connected!");
+            System.out.println("Client IP Address: " + clientAddress.getHostAddress());
+            System.out.println("Client Port Number: " + clientPort);
+
+            // Step 5: Close connections
+            socket.close();
+            serverSocket.close();
+        } 
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
